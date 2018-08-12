@@ -21,7 +21,7 @@ def clear():
 # Adding some variables to measure the
 # learning, this will only cause effect
 # if debug = True
-debug = True
+debug = False
 
 # 0 left, 1 down, 2 right, 3 up
 actions = ["LEFT", "DOWN", "RIGHT", "UP"]
@@ -76,14 +76,9 @@ for episode in range(total_episodes):
             # Exploration
             # Takes a random action from qtable
             # TODO: NOT SAMPLING PROPERLY
+            # Forcing to sampling right
             action = env.action_space.sample()
-            print(action)
-            pdb.set_trace()
-            
-            # NEED TO SAMPLE FROM ACTION SPACE
-            # action = random.randint(0,M)
-            # pdb.set_trace()
-            
+
         # Observation
         # Getting the new state or stepping into that state
         new_state, reward, dead, info = env.step(action)
@@ -126,7 +121,9 @@ for episode in range(total_episodes):
     rewards.append(total_rewards)
 
 print ("Score over time: " +  str(sum(rewards)/total_episodes))
-print(qtable)
+print ("WARNING: if numbers are too small and rounded to 0 the algorithm wont work")
+print ("Q-table * 1000 (to see small numbers without being rounded to 0): ")
+print(str(1000*qtable))
 
 sleep(3)
 
