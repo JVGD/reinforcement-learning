@@ -2,6 +2,7 @@ from numpy import *
 import gym
 import random
 import pdb
+import time
 
 # For printing in terminal
 from os import system, name
@@ -38,7 +39,7 @@ N = env.observation_space.n
 
 qtable = zeros([N,M])
 
-total_episodes = 1000         # Total episodes
+total_episodes = 10000         # Total episodes
 learning_rate = 0.8           # Learning rate
 max_steps = 100               # Max steps per episode
 gamma = 0.95                  # Discounting rate
@@ -53,6 +54,9 @@ decay_rate = 0.01             # Exponential decay rate for exploration prob
 # List of rewards
 rewards = []
 
+# Time of training
+t_start = time.time()
+
 # Looping through different episodes
 for episode in range(total_episodes):
     
@@ -61,6 +65,11 @@ for episode in range(total_episodes):
     step = 0
     done = False
     total_rewards = 0
+
+    # Printing train status
+    if episode > 0:
+        if total_episodes % episode == 0:
+            print("Training Status: " +str(episode/total_episodes * 100)+"%")
     
     # Looping for actions in episode
     for step in range(max_steps):
@@ -120,44 +129,54 @@ for episode in range(total_episodes):
     epsilon = min_epsilon + (max_epsilon - min_epsilon)* exp(-decay_rate*episode) 
     rewards.append(total_rewards)
 
+# Time end
+t_train = time.time() - t_start
+
+# Clearing terminal and showing reports
+clear()
+print ("Reports: ")
+print ("Time to train:   " + str(t_train) + " s")
 print ("Score over time: " +  str(sum(rewards)/total_episodes))
-print ("WARNING: if numbers are too small and rounded to 0 the algorithm wont work")
-print ("Q-table * 1000 (to see small numbers without being rounded to 0): ")
-print(str(1000*qtable))
+print (" ")
+print ("Q-table (numbers might be small")
+print(str(qtable))
 
-sleep(3)
+input("Press enter....")
 
+def play():
+    # Playing
+    env.reset()
 
-# Playing
-env.reset()
+    for episode in range(5):
+        state = env.reset()
+        step = 0
+        done = False
 
-for episode in range(5):
-    state = env.reset()
-    step = 0
-    done = False
+        for step in range(max_steps):
+            
+            # Clear terminal
+            clear()
 
-    for step in range(max_steps):
-		
-		# Clear terminal
-        clear()
+            # Print steps
+            print("****************************************************")
+            print("EPISODE ", episode)
+            
+            env.render()
+            
+            # Take the action (index) that have the maximum expected future reward given that state
+            action = argmax(qtable[state,:])
+            
+            new_state, reward, done, info = env.step(action)
+            
+            if done:
+                break
 
-        # Print steps
-        print("****************************************************")
-        print("EPISODE ", episode)
-        
-        env.render()
-        
-        # Take the action (index) that have the maximum expected future reward given that state
-        action = argmax(qtable[state,:])
-        
-        new_state, reward, done, info = env.step(action)
-        
-        if done:
-            break
+            state = new_state
 
-        state = new_state
+            # Time between simulations
+            sleep(0.5)
+            
+    env.close()
 
-        # Time between simulations
-        sleep(0.5)
-        
-env.close()
+if __name__ == "__main__":
+    play()
