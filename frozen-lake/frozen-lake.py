@@ -39,7 +39,7 @@ N = env.observation_space.n
 
 qtable = zeros([N,M])
 
-total_episodes = 10000         # Total episodes
+total_episodes = 10000        # Total episodes
 learning_rate = 0.8           # Learning rate
 max_steps = 100               # Max steps per episode
 gamma = 0.95                  # Discounting rate
@@ -53,6 +53,8 @@ decay_rate = 0.01             # Exponential decay rate for exploration prob
 # Learning
 # List of rewards
 rewards = []
+
+
 
 # Time of training
 t_start = time.time()
@@ -68,8 +70,11 @@ for episode in range(total_episodes):
 
     # Printing train status
     if episode > 0:
-        if total_episodes % episode == 0:
+        if episode % 100 == 0:
+            clear()
             print("Training Status: " +str(episode/total_episodes * 100)+"%")
+            print("Score over time: " +  str(sum(rewards)/episode))
+
     
     # Looping for actions in episode
     for step in range(max_steps):
@@ -129,21 +134,25 @@ for episode in range(total_episodes):
     epsilon = min_epsilon + (max_epsilon - min_epsilon)* exp(-decay_rate*episode) 
     rewards.append(total_rewards)
 
-# Time end
+# Train end timming
 t_train = time.time() - t_start
 
 # Clearing terminal and showing reports
 clear()
 print ("Reports: ")
-print ("Time to train:   " + str(t_train) + " s")
-print ("Score over time: " +  str(sum(rewards)/total_episodes))
+print ("Time to train:     " + str(t_train) + " s")
+print ("Score over time:   " +  str(sum(rewards)/total_episodes))
+print ("Total episodes:    " +  str(total_episodes))
+print ("Steps per episode: " +  str(max_steps))
+
 print (" ")
-print ("Q-table (numbers might be small")
+print ("Q-table (numbers might be small)")
 print(str(qtable))
 
 input("Press enter....")
 
 def play():
+
     # Playing
     env.reset()
 
@@ -158,7 +167,6 @@ def play():
             clear()
 
             # Print steps
-            print("****************************************************")
             print("EPISODE ", episode)
             
             env.render()
@@ -169,12 +177,29 @@ def play():
             new_state, reward, done, info = env.step(action)
             
             if done:
+                # Rendering final step to see final state
+                clear()
+                # Print steps
+                print("EPISODE ", episode)
+                env.render()
+
+                # Printing reports
+                print(" ")
+                print("Finish Report:")
+                print("Steps:    " + str(step))
+                print("Position: " + str(new_state))
+                if new_state == 15:
+                    print("Success:  " + "GOAL REACHED! :)")
+                else:
+                    print("Success:  " + "Game Over :(")
+                print(" ")
+                input("Press enter...")
                 break
 
             state = new_state
 
             # Time between simulations
-            sleep(0.5)
+            sleep(0.1)
             
     env.close()
 
