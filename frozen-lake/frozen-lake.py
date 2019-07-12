@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def clear():
-    """Clear terminal"""
+    """Clear terminal, useful for rendering"""
     # for windows
     if name == 'nt':
         _ = system('cls')
@@ -20,8 +20,7 @@ def clear():
 
 
 def get_nice_logger(debug=False, name=__file__):
-    """Get nice logger :)
-    """
+    """Get nice logger :)"""
     # Log format
     formating = '%(msecs)d [%(levelname)s] %(message)s'
     formatter = logging.Formatter(formating)
@@ -41,65 +40,7 @@ def get_nice_logger(debug=False, name=__file__):
     return logger
 
 
-def play():
-    """Playing the game"""
-
-    # Reseting environment
-    env.reset()
-
-    for episode in range(5):
-        state = env.reset()
-        step = 0
-        done = False
-
-        for step in range(max_steps):
-            
-            # Clear terminal
-            clear()
-
-            # Print steps
-            print("EPISODE ", episode)
-            
-            env.render()
-            
-            # Take the action (index) that have the maximum expected future   
-            # reward given that state
-            action = np.argmax(Q[state,:])
-            
-            new_state, reward, done, info = env.step(action)
-            
-            if done:
-                # Rendering final step to see final state
-                clear()
-                # Print steps
-                print("EPISODE ", episode)
-                env.render()
-
-                # Printing reports
-                print(" ")
-                print("Finish Report:")
-                print("Steps:    " + str(step))
-                print("Position: " + str(new_state))
-                if new_state == 15:
-                    print("Success:  " + "GOAL REACHED! :)")
-                else:
-                    print("Success:  " + "Game Over :(")
-                print(" ")
-                input("Press enter...")
-                break
-
-            state = new_state
-
-            # Time between simulations
-            sleep(0.1)
-            
-    env.close()
-
-
-if __name__ == "__main__":
-        
-    # Getting a nice logger to print stuff
-    log = get_nice_logger(debug=False, name='rocker-logger')
+def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
 
     # Loading environment
     log.info('Loading environment')
@@ -119,12 +60,8 @@ if __name__ == "__main__":
     log.info('Initializing Q-Table with random values')
     Q = np.random.rand(N, M)
 
-    total_episodes = int(1e5)     # Total episodes
-    learning_rate = 0.8           # Learning rate
-    max_steps = 100               # Max steps per episode
-    gamma = 0.95                  # Discounting rate
-
     # Exploration parameters
+    gamma = 0.95                  # Discounting rate
     epsilon = 1.0                 # Exploration rate
     max_epsilon = 1.0             # Exploration probability at start
     min_epsilon = 0.01            # Minimum exploration probability 
@@ -197,7 +134,7 @@ if __name__ == "__main__":
             # a positive intermediate reward if didnt die in the step taken
             # If not dead, update reward
             if not dead:
-                total_rewards += reward*10 + 1
+                total_rewards += reward * 10 + 1
                 if reward > 0:
                     print(reward)
 
@@ -224,3 +161,74 @@ if __name__ == "__main__":
     log.info("Steps per episode: " + str(max_steps))
     log.info("Q-table (numbers might be small)")
     log.info(str(Q))
+
+    log.info('Saving Q policy')
+    q_policy_name = 'Q_policy' + str(np.mean(rewards))
+    np.save(q_policy_name, Q)
+
+    return Q
+
+
+def play(Q, episodes=5, max_steps=100):
+    """Playing the game"""
+
+    # Reseting environment
+    log.info('Playing the game')
+
+    # Loading environment
+    log.info('Loading environment')
+    env = gym.make("FrozenLake-v0")
+
+    for episode in range(episodes):
+        state = env.reset()
+        step = 0
+        done = False
+
+        for step in range(max_steps):
+            
+            # Clear terminal
+            clear()
+
+            # Print steps
+            log.info("Episode: %d", episode)
+            env.render()
+            
+            # Take the action (index) that have the maximum 
+            # expected future reward given that state
+            action = np.argmax(Q[state,:])
+            
+            new_state, reward, done, info = env.step(action)
+            
+            if done:
+                # Print terminal state
+                clear()
+                log.info("Episode: %d", episode)
+                env.render()
+
+                # Printing reports
+                log.info("Finish Report:")
+                log.info("Steps:    %s", step)
+                log.info("Position: %s", new_state)
+                if new_state == 15:
+                    log.info("Success: GOAL REACHED! :)")
+                else:
+                    log.info("Success: Game Over :(")
+
+                input("Press enter...")
+                break
+
+            state = new_state
+
+            # Time between simulations
+            sleep(0.5)
+            
+    env.close()
+
+
+# Getting a nice logger to print stuff
+log = get_nice_logger(debug=False, name='rocker-logger')
+
+if __name__ == "__main__":
+    # Q = train()
+    Q = np.load('Q_policy-5.2945.npy')
+    play(Q)
