@@ -229,6 +229,5 @@ def play(Q, episodes=5, max_steps=100):
 log = get_nice_logger(debug=False, name='rocker-logger')
 
 if __name__ == "__main__":
-    # Q = train()
-    Q = np.load('Q_policy-5.2945.npy')
+    Q = train(total_episodes=10000)
     play(Q)
