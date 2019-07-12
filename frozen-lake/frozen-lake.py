@@ -186,7 +186,8 @@ def play(Q, episodes=5, max_steps=100):
 
         for step in range(max_steps):
             
-            # Clear terminal
+            # Waiting after simulation and clearing terminal
+            sleep(0.5)
             clear()
 
             # Print steps
@@ -201,6 +202,7 @@ def play(Q, episodes=5, max_steps=100):
             
             if done:
                 # Print terminal state
+                sleep(0.5)
                 clear()
                 log.info("Episode: %d", episode)
                 env.render()
@@ -218,9 +220,6 @@ def play(Q, episodes=5, max_steps=100):
                 break
 
             state = new_state
-
-            # Time between simulations
-            sleep(0.5)
             
     env.close()
 
