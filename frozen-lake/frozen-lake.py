@@ -1,3 +1,4 @@
+import argparse
 import logging
 from os import name, system
 from time import sleep
@@ -8,8 +9,62 @@ from numpy import random
 from tqdm import tqdm
 
 
+def parse_args():
+    description = 'Frozen Lake Agent Trainer and Player'
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--train", action='store_true',
+                        help="Train the agent")
+    parser.add_argument("--total_episodes",
+                        help="Number of episodes for the agent to learn")
+    parser.add_argument("--learning_rate",
+                        help="Learning rate for the training")
+    parser.add_argument("--max_steps",
+                        help="Max steps to take for the agent in 1 episode")
+    parser.add_argument("--play", action='store_true',
+                        help="Play the frozen lake game")
+    parser.add_argument("--policy",
+                        help="Policy to load to play with")
+    parser.add_argument("--debug", action='store_true',
+                        help="Wheter to print debug messages")
+    args = parser.parse_args()
+
+    # Defatult configuration
+    conf = {
+        'train': True,
+        'play': True,
+        'total_episodes': 10000,
+        'learning_rate': 0.8,
+        'max_steps': 100,
+        'policy': None,
+        'debug': False
+    }
+    
+    # Overriding conf with args
+    if args.train:
+        conf['play'] = False
+    if args.total_episodes:
+        conf['total_episodes'] = int(args.total_episodes)
+    if args.learning_rate:
+        conf['learning_rate'] = int(args.learning_rate)
+    if args.max_steps:
+        conf['max_steps'] = int(args.max_steps)
+
+    if args.play:
+        conf['train'] = False    
+        if args.policy:
+            conf['policy'] = args.policy
+        else:
+            raise ValueError('For --play you must provide a '
+                             'valid policy with --policy')
+    if args.debug:
+        conf['debug'] = args.debug
+    
+    return conf
+
+
 def clear():
-    """Clear terminal, useful for rendering"""
+    '''Clear terminal, useful for rendering'''
     # for windows
     if name == 'nt':
         _ = system('cls')
@@ -20,7 +75,7 @@ def clear():
 
 
 def get_nice_logger(debug=False, name=__file__):
-    """Get nice logger :)"""
+    '''Get nice logger :)'''
     # Log format
     formating = '%(msecs)d [%(levelname)s] %(message)s'
     formatter = logging.Formatter(formating)
@@ -44,10 +99,10 @@ def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
 
     # Loading environment
     log.info('Loading environment')
-    env = gym.make("FrozenLake-v0")
+    env = gym.make('FrozenLake-v0')
 
     # 0 left, 1 down, 2 right, 3 up
-    actions = ["LEFT", "DOWN", "RIGHT", "UP"]
+    actions = ['LEFT', 'DOWN', 'RIGHT', 'UP']
 
     # Getting environment data for Q-table
     # will have Q dimensions(N x M)
@@ -70,18 +125,17 @@ def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
     # List of rewards
     rewards = []
 
+    # Fancy progress bar
+    pbar = tqdm(range(total_episodes))
+
     # Looping through different episodes
-    for episode in tqdm(range(total_episodes)):
+    for episode in pbar:
         
         # Reseting environment for new episode
         state = env.reset()
         step = 0
         done = False
         total_rewards = 0
-
-        if episode % 500 == 0:
-            log.info("Training: %.2f%%", (episode / total_episodes) * 100)
-            log.info("Score   : %.2f", np.mean(rewards))
 
         # Looping for actions in episode
         for step in range(max_steps):
@@ -103,10 +157,10 @@ def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
             new_state, reward, dead, info = env.step(action)
 
             # Debug info
-            log.debug("Q[%r,%r] = " % (str(state), actions[action]) +
-                      "Q[state, action] + learning_rate * (reward "
-                      "+ gamma * max(Q[new_state, :]) - "
-                      "Q[state, action])")
+            log.debug('Q[%r,%r] = ' % (str(state), actions[action]) +
+                      'Q[state, action] + learning_rate * (reward '
+                      '+ gamma * max(Q[new_state, :]) - '
+                      'Q[state, action])')
 
             # Valoration
             # Updating Q-table
@@ -115,38 +169,32 @@ def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
                 (reward + gamma * max(Q[new_state, :]) - Q[state, action])
             )
             
-            # Cumulative reward for this episode
-            # total_rewards += reward
-            
             # Updating the state
             state = new_state
-            
+
             # Logging info
-            log.debug("Action: %r", actions[action])
-            log.debug("Next State: %r", new_state)
-            log.debug("Reward: %r", reward)
-            log.debug("max(Q[new_state, :]) = %r", np.max(Q[new_state, :]))
-            log.debug("New_Q[%r,%r] = %r", state, 
+            log.debug('Action: %r', actions[action])
+            log.debug('Next State: %r', new_state)
+            log.debug('Reward: %r', reward)
+            log.debug('max(Q[new_state, :]) = %r', np.max(Q[new_state, :]))
+            log.debug('New_Q[%r,%r] = %r', state, 
                       actions[action], Q[state, action])
-            
+
             # Since rewards are very sparse and only happens when the agent
             # reaches its final state, we help the agent a bit by giving him
             # a positive intermediate reward if didnt die in the step taken
             # If not dead, update reward
             if not dead:
-                total_rewards += reward * 10 + 1
+                total_rewards += reward + 1
                 if reward > 0:
                     print(reward)
 
-            # If deat update with negative reward
+            # If dead we could update with negative reward
             if dead: 
-                total_rewards += -10
-                log.debug("Agent died... :(")
+                total_rewards += 0
+                log.debug('Agent died... :(')
                 break
-        
-        # Updating number of episodes
-        episode += 1
-        
+
         # Reduce epsilon (because we need less and less exploration)
         epsilon = (
             min_epsilon + 
@@ -154,30 +202,37 @@ def train(total_episodes=10000, learning_rate=0.8, max_steps=100):
         )
         rewards.append(total_rewards)
 
+        # Updating progress bar with expected cumulative rewards
+        pbar.set_description('Score: %.2f' % np.mean(rewards))
+
+
     # Clearing terminal and showing reports
-    log.info("Reports: ")
-    log.info("Score over time:   " + str(sum(rewards) / total_episodes))
-    log.info("Total episodes:    " + str(total_episodes))
-    log.info("Steps per episode: " + str(max_steps))
-    log.info("Q-table (numbers might be small)")
+    log.info('Reports: ')
+    log.info('Score over time:   ' + str(sum(rewards) / total_episodes))
+    log.info('Total episodes:    ' + str(total_episodes))
+    log.info('Steps per episode: ' + str(max_steps))
+    log.info('Q-table (numbers might be small)')
     log.info(str(Q))
 
     log.info('Saving Q policy')
-    q_policy_name = 'Q_policy' + str(np.mean(rewards))
+    q_policy_name = 'Q_policy' + str(np.mean(rewards)) + '.npy'
     np.save(q_policy_name, Q)
 
-    return Q
+    return q_policy_name
 
 
 def play(Q, episodes=5, max_steps=100):
-    """Playing the game"""
+    '''Playing the game'''
+
+    # Loading policy
+    Q = np.load(Q)
 
     # Reseting environment
     log.info('Playing the game')
 
     # Loading environment
     log.info('Loading environment')
-    env = gym.make("FrozenLake-v0")
+    env = gym.make('FrozenLake-v0')
 
     for episode in range(episodes):
         state = env.reset()
@@ -191,7 +246,7 @@ def play(Q, episodes=5, max_steps=100):
             clear()
 
             # Print steps
-            log.info("Episode: %d", episode)
+            log.info('Episode: %d', episode)
             env.render()
             
             # Take the action (index) that have the maximum 
@@ -204,19 +259,19 @@ def play(Q, episodes=5, max_steps=100):
                 # Print terminal state
                 sleep(0.5)
                 clear()
-                log.info("Episode: %d", episode)
+                log.info('Episode: %d', episode)
                 env.render()
 
                 # Printing reports
-                log.info("Finish Report:")
-                log.info("Steps:    %s", step)
-                log.info("Position: %s", new_state)
+                log.info('Finish Report:')
+                log.info('Steps:    %s', step)
+                log.info('Position: %s', new_state)
                 if new_state == 15:
-                    log.info("Success: GOAL REACHED! :)")
+                    log.info('Success: GOAL REACHED! :)')
                 else:
-                    log.info("Success: Game Over :(")
+                    log.info('Success: Game Over :(')
 
-                input("Press enter...")
+                input('Press enter...')
                 break
 
             state = new_state
@@ -224,9 +279,36 @@ def play(Q, episodes=5, max_steps=100):
     env.close()
 
 
-# Getting a nice logger to print stuff
-log = get_nice_logger(debug=False, name='rocker-logger')
+def main(conf):
 
-if __name__ == "__main__":
-    Q = train(total_episodes=10000)
-    play(Q)
+    # Default behaviour: train and play with results from training
+    if conf['play'] and conf['train']:
+        Q = train(total_episodes=conf['total_episodes'], 
+                  learning_rate=conf['learning_rate'], 
+                  max_steps=conf['max_steps'])
+        play(Q)
+
+    # Just train and save result policy
+    elif conf['train']:
+        Q = train(total_episodes=conf['total_episodes'], 
+                  learning_rate=conf['learning_rate'], 
+                  max_steps=conf['max_steps'])
+    
+    # Just play with given policy
+    elif conf['play']:
+        play(conf['policy'])
+
+
+# Getting a nice logger to print stuff
+global log
+
+# Entry point
+if __name__ == '__main__':
+    # Getting conf
+    conf = parse_args()
+
+    # Configuring logger
+    log = get_nice_logger(debug=conf['debug'], name='rocker-logger')
+    
+    # Running program
+    main(conf)
