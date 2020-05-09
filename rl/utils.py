@@ -1,3 +1,4 @@
+import os
 import logging
 
 
@@ -23,3 +24,11 @@ def get_logger(logger_name=None, level=logging.INFO):
     logging_format = '%(asctime)s %(module)s [%(levelname)s]: %(message)s'
     logging.basicConfig(level=level, format=logging_format)
     return logger
+
+
+def mkdir(directory):
+    """Create directory if it does not exists
+    """
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
+

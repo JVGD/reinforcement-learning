@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 sys.path.append('.')
 from rl.utils import get_logger
+from rl.metrics import Recorder
 from rl.weights import format_weights_name, save_weights
 from rl.agents.qlearning import QLearningAgent
 
@@ -28,6 +29,9 @@ def train(episodes=1000):
     N_actions = env.action_space.n
     agent = QLearningAgent(init_state, N_states, N_actions)
 
+    # Metrics for storing in tensorboard every 10 episodes
+    metrics = Recorder(skip_steps=10)
+
     # Training loop
     log.info('Start training')
     progress_bar = tqdm(range(episodes), unit='episode')
@@ -37,7 +41,6 @@ def train(episodes=1000):
         # Reseting environment for new episode
         state = env.reset()
         ended = False
-        rewards = []
 
         while not ended:
             # Playing
@@ -46,14 +49,14 @@ def train(episodes=1000):
             agent.update(state, reward)
             
             # Metrics
-            rewards.append(reward)
+            metrics.record(reward)
 
         # Logging
-        rewards_avg = T.tensor(rewards, dtype=T.float).mean().item()
-        progress_bar.set_description('Episode reward: %.3f' % rewards_avg)
+        episode_reward = metrics.log(episode)
+        progress_bar.set_description('Episode reward: %.3f' % episode_reward)
     
     # Saving weights after training
-    weights = format_weights_name(episode, rewards_avg, 'taxiv3')
+    weights = format_weights_name(episode, episode_reward, 'taxiv3')
     save_weights(agent, weights)
     log.info('Saved weights: %s', weights)
     
