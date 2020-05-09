@@ -6,16 +6,16 @@ import torch as T
 from tqdm import tqdm
 
 sys.path.append('.')
-from rl.agents.qlearning import QLearningAgent
+from rl.utils import get_logger
 from rl.weights import format_weights_name, save_weights
+from rl.agents.qlearning import QLearningAgent
 
 
 def train(episodes=1000):
     """Trains an agent to play Taxi-v3
     """
-    log = logging.getLogger(__name__)
-    log.setLevel(logging.INFO)
-
+    log = get_logger(__name__)
+    
     # Building environment & reseting to init state
     log.warning('Building environment')
     env = gym.make('Taxi-v3')
@@ -55,7 +55,7 @@ def train(episodes=1000):
     # Saving weights after training
     weights = format_weights_name(episode, rewards_avg, 'taxiv3')
     save_weights(agent, weights)
-    log.info('Save weights: %s', weights)
+    log.info('Saved weights: %s', weights)
     
 
 if __name__== '__main__':
