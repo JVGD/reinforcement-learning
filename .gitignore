@@ -4,3 +4,4 @@
 *.pyc
 *.pt
 *events.out.tfevents.*
+logs/*

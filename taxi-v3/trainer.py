@@ -1,5 +1,4 @@
 import sys
-import logging
 
 import gym
 import torch as T
@@ -18,7 +17,7 @@ def train(episodes=3000, log_every=100):
     log = get_logger(__name__)
     
     # Building environment & reseting to init state
-    log.warning('Building environment')
+    log.info('Building environment')
     env = gym.make('Taxi-v3')
     init_state = env.reset()
     state = init_state
