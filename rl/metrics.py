@@ -1,4 +1,4 @@
-import sys
+import os
 import torch as T
 from torch.utils.tensorboard import SummaryWriter
 
@@ -8,13 +8,14 @@ from rl.utils import mkdir
 class Recorder(SummaryWriter):
     """Class for recording data in Tensorboard
     """
-    def __init__(self, log_dir='./logs', skip_steps=1):
-        # Creating logging directory
-        mkdir(log_dir)
-        self.log_dir = log_dir
+    def __init__(self, log_dir, skip_steps=1):
+        # Creating logging directory: ./logs/log_dir_name/*logs
+        log_dir_path = os.path.join('./logs', log_dir)
+        mkdir(log_dir_path)
+        self.log_dir = log_dir_path
 
         # Getting summary writer in log_dir
-        super().__init__(log_dir=log_dir)
+        super().__init__(log_dir=log_dir_path)
 
         # Vars to record info
         self.data = []
@@ -40,9 +41,9 @@ class Recorder(SummaryWriter):
         episode : int
             Episode number
         """
-        # Averaging episode rewards
+        # Accumulating episode rewards
         rewards = T.tensor(self.data, dtype=T.float)
-        rewards_avg = rewards.mean().item()
+        rewards_avg = rewards.sum().item()
 
         # Logging to tensorboard only every skip_steps
         if episode % self.skip_steps == 0:

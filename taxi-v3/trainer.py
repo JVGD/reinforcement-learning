@@ -12,7 +12,7 @@ from rl.weights import format_weights_name, save_weights
 from rl.agents.qlearning import QLearningAgent
 
 
-def train(episodes=10000, log_every=100):
+def train(episodes=3000, log_every=100):
     """Trains an agent to play Taxi-v3
     """
     log = get_logger(__name__)
@@ -30,7 +30,7 @@ def train(episodes=10000, log_every=100):
     agent = QLearningAgent(init_state, N_states, N_actions)
 
     # Metrics for storing in tensorboard every log_every episodes
-    metrics = Recorder(skip_steps=log_every)
+    metrics = Recorder(log_dir='taxi-v3', skip_steps=log_every)
 
     # Training loop
     log.info('Start training')
