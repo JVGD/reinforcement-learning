@@ -31,6 +31,7 @@ def train(episodes=3000, log_every=100):
 
     # Metrics for storing in tensorboard every log_every episodes
     metrics = Recorder(log_dir='taxi-v3', skip_steps=log_every)
+    log.info('Logs in: %s', metrics.log_dir)
 
     # Training loop
     log.info('Start training')

@@ -3,9 +3,6 @@ import torch as T
 from torch import nn
 
 
-sys.path.append('.')
-
-
 class QLearningAgent(nn.Module):
     """Time Difference learning algorithm: Q learning
     """
@@ -68,10 +65,3 @@ class QLearningAgent(nn.Module):
 
         # Updating current state
         self.state = state_next
-
-
-if __name__ == '__main__':
-
-    from IPython import embed
-    agent = QLearningAgent(init_state=0, N_states=20, N_actions=4)
-    embed()
