@@ -44,9 +44,8 @@ Rendering:
 * green: full taxi
 * other letters (R, G, Y and B): locations for passengers and destinations
 
-
-state space is represented by:
+State space is represented by:
 
 ```
-(taxi_row, taxi_col, passenger_location, destination) = env.step(action)
+(state, reward, end, info) = env.step(action)
 ```
