@@ -1,5 +1,6 @@
 import sys
 
+import argparse
 import gym
 import torch as T
 from tqdm import tqdm
@@ -62,4 +63,20 @@ def train(episodes=3000, log_every=100):
     
 
 if __name__== '__main__':
-    train()
+    # Parse args
+    description = 'Taxi-v3 agent trainer'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument(
+        '--episodes', 
+        default=3000,
+        type=int,
+        help='Number of episodes to train the agent')
+    parser.add_argument(
+        '--log_freq',
+        default=100,
+        type=int,
+        help='Tensorboard logging every log_freq episodes')
+    args = parser.parse_args()
+
+    # Do the training
+    train(episodes=args.episodes, log_every=args.log_freq)

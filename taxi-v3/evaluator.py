@@ -2,6 +2,7 @@ import os
 import time
 import sys
 
+import argparse
 import gym
 import torch as T
 from tqdm import tqdm
@@ -66,4 +67,12 @@ def play(weights):
 
 
 if __name__== '__main__':
-    play('episode9999_reward-6.00_taxiv3.pt')
+    # Parse args
+    description = 'Taxi-v3 agent evaluator'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('weights', 
+                        help='Path to weigths to load for the agent')
+    args = parser.parse_args()
+
+    # Playing
+    play(weights=args.weights)
