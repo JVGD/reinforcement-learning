@@ -1,3 +1,4 @@
+import os
 import torch as T
 from torch import nn
 
@@ -25,7 +26,8 @@ def format_weights_name(episode:int, reward:float, env_name:str):
     return weights_name
 
 
-def save_weights(module: nn.Module, weights_file:str='weights.pt'):
+def save_weights(module: nn.Module, weights_file:str='weights.pt', 
+                 path:str='./'):
     """Save weights of module as .pt file
 
     Parameters
@@ -34,9 +36,17 @@ def save_weights(module: nn.Module, weights_file:str='weights.pt'):
         Torch module or agent for which to save weights
     weights_file_path : str
         File path to save the weights (should end in .pt)
+    path : str
+        Path to leave the weights
     """
+    # Getting weights
     weights = module.state_dict()
+    
+    # Building path
+    path = os.path.join('./logs', path)
+    weights_file = os.path.join(path, weights_file)
     T.save(weights, weights_file)
+    return weights_file
 
 
 def load_weights(model: nn.Module, weights_file:str='weights.pt'):
